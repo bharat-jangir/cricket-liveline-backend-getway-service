@@ -14,10 +14,8 @@ export class UpdateLiveStatusDto {
   currentOver?: number;
 
   @IsOptional()
-  @IsNumber()
-  @Min(0)
-  @Max(6)
-  currentBall?: number;
+  @IsString()
+  currentBall?: string;
 
   @IsOptional()
   @IsMongoId()
@@ -103,7 +101,6 @@ export class UpdateLiveStatusDto {
   @IsOptional()
   @IsNumber()
   @Min(0)
-  @Max(100)
   lambiRed?: number;
 
   @IsOptional()

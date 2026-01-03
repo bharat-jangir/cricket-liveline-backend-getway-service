@@ -773,6 +773,7 @@ export class AdminLiveMatchController {
   @UsePipes(new ValidationPipe({ transform: true }))
   async handleEvent(@Param('matchId') matchId: string, @Body() event: ScoreEventDto) {
     try {
+      console.log('handleEvent payload controller', matchId, event);
       if (!/^[0-9a-fA-F]{24}$/.test(matchId)) {
         return {
           statusCode: HttpStatus.BAD_REQUEST,
