@@ -41,21 +41,11 @@ export class MainAppService implements OnModuleInit, OnModuleDestroy {
 
   async send(pattern: string, data: any): Promise<any> {
     try {
-      return await this.client.send(pattern, data).toPromise();
+      return await this.client.send(pattern, data).pipe().toPromise();
     } catch (error: any) {
       this.logger.error(`Error sending message to main-app - Pattern: ${pattern}`);
+      this.logger.error(`Data: ${JSON.stringify(data)}`);
       this.logger.error(`Error Message: ${error?.message || error}`);
-      this.logger.error(`Error Stack: ${error?.stack || 'No stack trace available'}`);
-      if (error?.name) {
-        this.logger.error(`Error Name: ${error.name}`);
-      }
-      if (error?.code) {
-        this.logger.error(`Error Code: ${error.code}`);
-      }
-      if (error?.response) {
-        this.logger.error(`Error Response: ${JSON.stringify(error.response, null, 2)}`);
-      }
-      // Re-throw the error so it can be handled by the exception filter
       throw error;
     }
   }

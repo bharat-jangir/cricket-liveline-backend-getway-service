@@ -22,6 +22,7 @@ import { UpdateMatchSquadDto } from '../../dto/admin/update-match-squad.dto';
 import { SwitchTeamDto } from '../../dto/admin/switch-team.dto';
 import { UpdateTossDto } from '../../dto/admin/update-toss.dto';
 import { ScoreEventDto } from '../../dto/admin/score-event.dto';
+import { SimpleEventDto } from '../../dto/admin/simple-event.dto';
 
 
 @Controller('admin/matches/:matchId')
@@ -51,6 +52,7 @@ export class AdminLiveMatchController {
       if (!result) {
         throw new Error('No response from main app service');
       }
+      // Return main-app response directly without wrapping
       return result;
     } catch (error: any) {
       this.logger.error('Error in getLiveStatus', error.stack || error.message || error);
@@ -80,11 +82,30 @@ export class AdminLiveMatchController {
         };
       }
 
-      const result = await this.mainAppService.send('live-match.getInnings', matchId);
-      if (!result) {
-        throw new Error('No response from main app service');
+      // Get all innings for this match (1-4)
+      const innings = [];
+      for (let i = 1; i <= 4; i++) {
+        try {
+          const result = await this.mainAppService.send('live-match.getScorecard', { matchId, inningNumber: i });
+          if (result && result.data && result.data.result && result.data.result.inning) {
+            innings.push(result.data.result.inning);
+          }
+        } catch (error) {
+          // Inning doesn't exist, skip it
+          continue;
+        }
       }
-      return result;
+
+      return {
+        statusCode: HttpStatus.OK,
+        status: true,
+        userMessage: 'Innings retrieved successfully',
+        userMessageCode: 'INNINGS_RETRIEVED',
+        developerMessage: 'Innings retrieved successfully',
+        data: {
+          result: innings
+        }
+      };
     } catch (error: any) {
       this.logger.error('Error in getInnings', error.stack || error.message || error);
       return {
@@ -114,7 +135,7 @@ export class AdminLiveMatchController {
         };
       }
 
-      const result = await this.mainAppService.send('live-match.updateStatus', { matchId, updateDto });
+      const result = await this.mainAppService.send('live-match.updateLiveStatus', { matchId, updateDto });
       return result;
     } catch (error: any) {
       this.logger.error('Error in updateLiveStatus', error.stack || error.message || error);
@@ -514,6 +535,56 @@ export class AdminLiveMatchController {
     }
   }
 
+  @Put('over-summaries/update')
+  @HttpCode(HttpStatus.OK)
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async updateOverSummary(
+    @Param('matchId') matchId: string,
+    @Body() body: { inningNumber: number; overNumber: number; ballsData: any[] },
+  ) {
+    try {
+      if (!/^[0-9a-fA-F]{24}$/.test(matchId)) {
+        return {
+          statusCode: HttpStatus.BAD_REQUEST,
+          status: false,
+          userMessage: 'Invalid match ID format',
+          userMessageCode: 'INVALID_ID',
+          developerMessage: 'Match ID must be a valid MongoDB ObjectId',
+          data: null,
+        };
+      }
+
+      if (!body.inningNumber || !body.overNumber || !body.ballsData) {
+        return {
+          statusCode: HttpStatus.BAD_REQUEST,
+          status: false,
+          userMessage: 'Missing required fields',
+          userMessageCode: 'MISSING_FIELDS',
+          developerMessage: 'inningNumber, overNumber, and ballsData are required',
+          data: null,
+        };
+      }
+
+      const result = await this.mainAppService.send('live-match.updateOverSummary', {
+        matchId,
+        inningNumber: body.inningNumber,
+        overNumber: body.overNumber,
+        ballsData: body.ballsData,
+      });
+      return result;
+    } catch (error: any) {
+      this.logger.error('Error in updateOverSummary', error.stack || error.message || error);
+      return {
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        status: false,
+        userMessage: 'Failed to update over summary',
+        userMessageCode: 'OVER_SUMMARY_UPDATE_FAILED',
+        developerMessage: error.message,
+        data: null,
+      };
+    }
+  }
+
   @Post('over-summaries/:inningNumber')
   @HttpCode(HttpStatus.OK)
   @UsePipes(new ValidationPipe({ transform: true }))
@@ -800,6 +871,38 @@ export class AdminLiveMatchController {
     }
   }
 
+  @Post('simple-event')
+  @HttpCode(HttpStatus.OK)
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async handleSimpleEvent(@Param('matchId') matchId: string, @Body() simpleEvent: SimpleEventDto) {
+    try {
+      console.log('handleSimpleEvent payload controller', matchId, simpleEvent);
+      if (!/^[0-9a-fA-F]{24}$/.test(matchId)) {
+        return {
+          statusCode: HttpStatus.BAD_REQUEST,
+          status: false,
+          userMessage: 'Invalid match ID format',
+          userMessageCode: 'INVALID_MATCH_ID',
+          developerMessage: 'Match ID must be a valid MongoDB ObjectId',
+          data: null,
+        };
+      }
+
+      const result = await this.mainAppService.send('live-match.handleSimpleEvent', { matchId, event: simpleEvent.event });
+      return result;
+    } catch (error: any) {
+      this.logger.error('Error in handleSimpleEvent', error.stack || error.message || error);
+      return {
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        status: false,
+        userMessage: 'Failed to process simple event',
+        userMessageCode: 'SIMPLE_EVENT_PROCESS_FAILED',
+        developerMessage: error.message,
+        data: null,
+      };
+    }
+  }
+
   @Post('set-striker/:inningNumber/:playerId')
   @HttpCode(HttpStatus.OK)
   async setStriker(
@@ -912,43 +1015,58 @@ export class AdminLiveMatchController {
     }
   }
 
-  @Post('set-current-bowler/:inningNumber/:playerId')
+  @Get('recent-overs')
   @HttpCode(HttpStatus.OK)
-  async setCurrentBowler(
+  async getRecentOvers(
     @Param('matchId') matchId: string,
-    @Param('inningNumber') inningNumber: number,
-    @Param('playerId') playerId: string,
+    @Query('inningNumber') inningNumber?: string,
   ) {
     try {
-      if (!/^[0-9a-fA-F]{24}$/.test(matchId) || !/^[0-9a-fA-F]{24}$/.test(playerId)) {
+      if (!/^[0-9a-fA-F]{24}$/.test(matchId)) {
         return {
           statusCode: HttpStatus.BAD_REQUEST,
           status: false,
-          userMessage: 'Invalid ID format',
-          userMessageCode: 'INVALID_ID',
-          developerMessage: 'Match ID and Player ID must be valid MongoDB ObjectIds',
+          userMessage: 'Invalid match ID format',
+          userMessageCode: 'INVALID_MATCH_ID',
+          developerMessage: 'Match ID must be a valid MongoDB ObjectId',
           data: null,
         };
       }
 
-      const result = await this.mainAppService.send('live-match.setCurrentBowler', {
+      let inningNum: number | undefined;
+      if (inningNumber) {
+        inningNum = parseInt(inningNumber, 10);
+        if (isNaN(inningNum) || inningNum < 1 || inningNum > 4) {
+          return {
+            statusCode: HttpStatus.BAD_REQUEST,
+            status: false,
+            userMessage: 'Invalid inning number',
+            userMessageCode: 'INVALID_INNING_NUMBER',
+            developerMessage: 'Inning number must be between 1 and 4',
+            data: null,
+          };
+        }
+      }
+
+      const result = await this.mainAppService.send('live-match.getRecentOvers', {
         matchId,
-        inningNumber: parseInt(inningNumber.toString()),
-        playerId,
+        inningNumber: inningNum,
       });
+      if (!result) {
+        throw new Error('No response from main app service');
+      }
       return result;
     } catch (error: any) {
-      this.logger.error('Error in setCurrentBowler', error.stack || error.message || error);
+      this.logger.error('Error in getRecentOvers', error.stack || error.message || error);
       return {
         statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         status: false,
-        userMessage: 'Failed to set current bowler',
-        userMessageCode: 'SET_CURRENT_BOWLER_FAILED',
-        developerMessage: error.message,
+        userMessage: 'Failed to fetch recent overs',
+        userMessageCode: 'RECENT_OVERS_FETCH_FAILED',
+        developerMessage: error?.message || error?.toString() || 'Unknown error',
         data: null,
       };
     }
   }
+
 }
-
-
