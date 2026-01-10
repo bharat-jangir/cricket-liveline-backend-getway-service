@@ -1015,6 +1015,44 @@ export class AdminLiveMatchController {
     }
   }
 
+  @Post('set-current-bowler/:inningNumber/:playerId')
+  @HttpCode(HttpStatus.OK)
+  async setCurrentBowler(
+    @Param('matchId') matchId: string,
+    @Param('inningNumber') inningNumber: number,
+    @Param('playerId') playerId: string,
+  ) {
+    try {
+      if (!/^[0-9a-fA-F]{24}$/.test(matchId) || !/^[0-9a-fA-F]{24}$/.test(playerId)) {
+        return {
+          statusCode: HttpStatus.BAD_REQUEST,
+          status: false,
+          userMessage: 'Invalid ID format',
+          userMessageCode: 'INVALID_ID',
+          developerMessage: 'Match ID and Player ID must be valid MongoDB ObjectIds',
+          data: null,
+        };
+      }
+
+      const result = await this.mainAppService.send('live-match.setCurrentBowler', {
+        matchId,
+        inningNumber: parseInt(inningNumber.toString()),
+        playerId,
+      });
+      return result;
+    } catch (error: any) {
+      this.logger.error('Error in setCurrentBowler', error.stack || error.message || error);
+      return {
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        status: false,
+        userMessage: 'Failed to set current bowler',
+        userMessageCode: 'SET_CURRENT_BOWLER_FAILED',
+        developerMessage: error.message,
+        data: null,
+      };
+    }
+  }
+
   @Get('recent-overs')
   @HttpCode(HttpStatus.OK)
   async getRecentOvers(

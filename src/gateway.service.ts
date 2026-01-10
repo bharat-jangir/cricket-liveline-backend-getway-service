@@ -12,7 +12,7 @@ export class GatewayService {
   constructor(
     private readonly httpService: HttpService,
     private readonly mainAppService: MainAppService,
-  ) {}
+  ) { }
 
   async proxyRequest(req: Request) {
     try {
@@ -32,11 +32,11 @@ export class GatewayService {
       }
     } catch (error: any) {
       this.logger.error(`Gateway error: ${error?.message || error}`);
-      
+
       if (error instanceof HttpException) {
         throw error;
       }
-      
+
       throw new HttpException(
         error.message || 'Gateway error',
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -46,9 +46,9 @@ export class GatewayService {
 
   private async handleMainAppRequest(req: Request, path: string) {
     const routePattern = this.pathToMessagePattern(path, req.method);
-    
+
     this.logger.log(`Routing ${req.method} ${path} -> ${routePattern}`);
-    
+
     if (!routePattern) {
       throw new HttpException(
         `No route pattern found for ${req.method} ${path}`,
@@ -59,16 +59,16 @@ export class GatewayService {
     // Prepare data based on route pattern and method
     let data: any;
     const pathParts = path.split('/').filter(Boolean);
-    
+
     // Remove 'admin' prefix if present
     if (pathParts[0] === 'admin') {
       pathParts.shift();
     }
-    
+
     // Handle live-match specific data formatting
     if (routePattern.startsWith('live-match.')) {
       const matchId = pathParts[1]; // matches/:id/...
-      
+
       if (routePattern === 'live-match.getRecentOvers') {
         data = {
           matchId,
@@ -77,7 +77,7 @@ export class GatewayService {
       } else if (routePattern === 'live-match.getScorecard') {
         // Handle both /innings and /scorecard/:inningNumber
         let inningNumber = 1; // default
-        
+
         if (pathParts[2] === 'scorecard' && pathParts[3]) {
           // /matches/:id/scorecard/:inningNumber
           inningNumber = parseInt(pathParts[3]) || 1;
@@ -88,7 +88,7 @@ export class GatewayService {
           // Query parameter
           inningNumber = parseInt(req.query.inningNumber as string) || 1;
         }
-        
+
         data = {
           matchId,
           inningNumber
@@ -145,11 +145,11 @@ export class GatewayService {
       this.logger.error(`Main-app service error for ${routePattern}:`, error?.message || error);
       this.logger.error(`Data sent:`, JSON.stringify(data));
       this.logger.error(`Path: ${path}, Method: ${req.method}`);
-      
+
       if (error?.status === 404 || error?.message?.includes('not found')) {
         throw new HttpException(error.message || 'Resource not found', HttpStatus.NOT_FOUND);
       }
-      
+
       throw new HttpException(
         error?.message || 'Internal server error',
         error?.status || HttpStatus.INTERNAL_SERVER_ERROR,
@@ -160,7 +160,7 @@ export class GatewayService {
   private async handleSocketServiceRequest(req: Request, path: string) {
     // HTTP proxy for socket service (if needed in future)
     const targetUrl = `${this.socketServiceUrl}${path}`;
-    
+
     const response = await firstValueFrom(
       this.httpService.request({
         method: req.method as any,
@@ -190,27 +190,27 @@ export class GatewayService {
   private pathToMessagePattern(path: string, method: string): string | null {
     // Convert HTTP path to microservice message pattern
     const pathParts = path.split('/').filter(Boolean);
-    
+
     // Remove 'admin' prefix if present
     if (pathParts[0] === 'admin') {
       pathParts.shift();
     }
-    
+
     if (pathParts.length === 0) {
       return null;
     }
-    
+
     const resource = pathParts[0]; // e.g., 'venues', 'matches'
-    
+
     // Handle special live-match routes
     if (resource === 'matches' && pathParts.length >= 3) {
       const subResource = pathParts[2];
-      
+
       // Handle /matches/:id/innings -> use getScorecard
       if (subResource === 'innings') {
         return 'live-match.getScorecard';
       }
-      
+
       // Handle /matches/:id/scorecard routes
       if (subResource === 'scorecard') {
         // Check for /matches/:id/scorecard/:inningNumber/inning PUT
@@ -220,37 +220,41 @@ export class GatewayService {
         // Default scorecard route
         return 'live-match.getScorecard';
       }
-      
+
       // Map other sub-resources to live-match patterns
       const liveMatchRoutes: Record<string, string> = {
         'live-status': method === 'PUT' ? 'live-match.updateLiveStatus' : 'live-match.getStatus',
-        'recent-overs': 'live-match.getRecentOvers', 
+        'recent-overs': 'live-match.getRecentOvers',
         'squads': 'live-match.getSquads',
-        'sessions': 'live-match.getSessions'
+        'sessions': 'live-match.getSessions',
+        'set-current-bowler': 'live-match.setCurrentBowler',
+        'set-striker': 'live-match.setStriker',
+        'set-non-striker': 'live-match.setNonStriker',
+        'swap-batsmen': 'live-match.swapBatsmen',
       };
-      
+
       if (liveMatchRoutes[subResource]) {
         return liveMatchRoutes[subResource];
       }
-      
+
 
     }
-    
+
     // Standard CRUD operations
     const hasId = pathParts.length > 1 && pathParts[pathParts.length - 1];
-    
+
     const methodMap: Record<string, string> = {
       GET: hasId ? 'findOne' : 'findAll',
       POST: 'create',
       PUT: 'update',
       DELETE: 'remove',
     };
-    
+
     const action = methodMap[method];
     if (!action) {
       return null;
     }
-    
+
     return `${resource}.${action}`;
   }
 }
