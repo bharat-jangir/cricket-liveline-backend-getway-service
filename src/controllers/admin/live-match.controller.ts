@@ -12,6 +12,7 @@ import {
   HttpCode,
   HttpStatus,
   Logger,
+  Patch,
 } from '@nestjs/common';
 import { MainAppService } from '../../services/main-app.service';
 import { UpdateLiveStatusDto } from '../../dto/admin/update-live-status.dto';
@@ -30,6 +31,62 @@ export class AdminLiveMatchController {
   private readonly logger = new Logger(AdminLiveMatchController.name);
 
   constructor(private readonly mainAppService: MainAppService) { }
+
+  @Get('match-details')
+  @HttpCode(HttpStatus.OK)
+  async getMatchDetails(@Param('matchId') matchId: string) {
+    try {
+      if (!/^[0-9a-fA-F]{24}$/.test(matchId)) {
+        return {
+          statusCode: HttpStatus.BAD_REQUEST,
+          status: false,
+          userMessage: 'Invalid match ID format',
+          developerMessage: 'Match ID must be a valid MongoDB ObjectId',
+          data: null,
+        };
+      }
+
+      const result = await this.mainAppService.send('live-match.getMatchDetails', matchId);
+      return result;
+    } catch (error: any) {
+      this.logger.error('Error in getMatchDetails', error.stack || error.message || error);
+      return {
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        status: false,
+        userMessage: 'Failed to fetch match details',
+        developerMessage: error?.message || 'Unknown error',
+        data: null,
+      };
+    }
+  }
+
+  @Patch('match-details')
+  @HttpCode(HttpStatus.OK)
+  async updateMatchDetails(@Param('matchId') matchId: string, @Body() updateDto: any) {
+    try {
+      if (!/^[0-9a-fA-F]{24}$/.test(matchId)) {
+        return {
+          statusCode: HttpStatus.BAD_REQUEST,
+          status: false,
+          userMessage: 'Invalid match ID format',
+          developerMessage: 'Match ID must be a valid MongoDB ObjectId',
+          data: null,
+        };
+      }
+
+      const result = await this.mainAppService.send('live-match.updateMatchDetails', { matchId, updateDto });
+      return result;
+    } catch (error: any) {
+      this.logger.error('Error in updateMatchDetails', error.stack || error.message || error);
+      return {
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        status: false,
+        userMessage: 'Failed to update match details',
+        developerMessage: error?.message || 'Unknown error',
+        data: null,
+      };
+    }
+  }
 
   // Live Status APIs
   @Get('live-status')

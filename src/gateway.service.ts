@@ -116,8 +116,8 @@ export class GatewayService {
       // Standard CRUD data formatting
       if (req.method === 'GET') {
         const lastPart = pathParts[pathParts.length - 1];
-        const resourceNames = ['venues', 'teams', 'players', 'matches'];
-        if (lastPart && !req.query[lastPart] && Object.keys(req.query).length === 0 && !resourceNames.includes(lastPart.toLowerCase())) {
+        const resourceNames = ['venues', 'teams', 'players', 'matches', 'umpires', 'series'];
+        if (lastPart && !resourceNames.includes(lastPart.toLowerCase()) && Object.keys(req.query).length === 0) {
           data = lastPart; // It's an ID
         } else {
           data = req.query; // Use query params
@@ -241,7 +241,9 @@ export class GatewayService {
     }
 
     // Standard CRUD operations
-    const hasId = pathParts.length > 1 && pathParts[pathParts.length - 1];
+    const resourceNames = ['venues', 'teams', 'players', 'matches', 'umpires', 'series'];
+    const lastPart = pathParts[pathParts.length - 1];
+    const hasId = pathParts.length > 1 && lastPart && !resourceNames.includes(lastPart.toLowerCase());
 
     const methodMap: Record<string, string> = {
       GET: hasId ? 'findOne' : 'findAll',
