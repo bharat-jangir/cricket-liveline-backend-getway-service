@@ -24,6 +24,7 @@ import { SwitchTeamDto } from '../../dto/admin/switch-team.dto';
 import { UpdateTossDto } from '../../dto/admin/update-toss.dto';
 import { ScoreEventDto } from '../../dto/admin/score-event.dto';
 import { SimpleEventDto } from '../../dto/admin/simple-event.dto';
+import { StartSuperOverDto } from '../../dto/admin/start-super-over.dto';
 
 
 @Controller('admin/matches/:matchId')
@@ -945,7 +946,12 @@ export class AdminLiveMatchController {
         };
       }
 
-      const result = await this.mainAppService.send('live-match.handleSimpleEvent', { matchId, event: simpleEvent.event });
+      const result = await this.mainAppService.send('live-match.handleSimpleEvent', {
+        matchId,
+        event: simpleEvent.event,
+        bowlerName: simpleEvent.bowlerName,
+        batsmanName: simpleEvent.batsmanName
+      });
       return result;
     } catch (error: any) {
       this.logger.error('Error in handleSimpleEvent', error.stack || error.message || error);
@@ -1163,5 +1169,111 @@ export class AdminLiveMatchController {
       };
     }
   }
+  @Get('commentary')
+  @HttpCode(HttpStatus.OK)
+  async getCommentary(
+    @Param('matchId') matchId: string,
+    @Query('inningId') inningId?: string,
+  ) {
+    try {
+      if (!/^[0-9a-fA-F]{24}$/.test(matchId)) {
+        return {
+          statusCode: HttpStatus.BAD_REQUEST,
+          status: false,
+          userMessage: 'Invalid match ID format',
+          developerMessage: 'Match ID must be a valid MongoDB ObjectId',
+          data: null,
+        };
+      }
 
+      const result = await this.mainAppService.send('live-match.getCommentary', { matchId, inningId });
+      return result;
+    } catch (error: any) {
+      this.logger.error('Error in getCommentary', error.stack || error.message || error);
+      return {
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        status: false,
+        userMessage: 'Failed to fetch commentary',
+        developerMessage: error?.message || 'Unknown error',
+        data: null,
+      };
+    }
+  }
+
+  @Patch('commentary/:commentaryId')
+  @HttpCode(HttpStatus.OK)
+  async updateCommentary(
+    @Param('matchId') matchId: string,
+    @Param('commentaryId') commentaryId: string,
+    @Body('commentary') commentary: string,
+  ) {
+    try {
+      const result = await this.mainAppService.send('live-match.updateCommentary', {
+        commentaryId,
+        commentary,
+      });
+      return result;
+    } catch (error: any) {
+      this.logger.error('Error in updateCommentary', error.stack || error.message || error);
+      return {
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        status: false,
+        userMessage: 'Failed to update commentary',
+        developerMessage: error?.message || 'Unknown error',
+        data: null,
+      };
+    }
+  }
+
+  @Delete('commentary/:commentaryId')
+  @HttpCode(HttpStatus.OK)
+  async deleteCommentary(
+    @Param('matchId') matchId: string,
+    @Param('commentaryId') commentaryId: string,
+  ) {
+    try {
+      const result = await this.mainAppService.send('live-match.deleteCommentary', { commentaryId });
+      return result;
+    } catch (error: any) {
+      this.logger.error('Error in deleteCommentary', error.stack || error.message || error);
+      return {
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        status: false,
+        userMessage: 'Failed to delete commentary',
+        developerMessage: error?.message || 'Unknown error',
+        data: null,
+      };
+    }
+  }
+
+  @Post('super-over')
+  @HttpCode(HttpStatus.OK)
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async startSuperOver(@Param('matchId') matchId: string, @Body() startDto?: StartSuperOverDto) {
+    try {
+      if (!/^[0-9a-fA-F]{24}$/.test(matchId)) {
+        return {
+          statusCode: HttpStatus.BAD_REQUEST,
+          status: false,
+          userMessage: 'Invalid match ID format',
+          userMessageCode: 'INVALID_MATCH_ID',
+          developerMessage: 'Match ID must be a valid MongoDB ObjectId',
+          data: null,
+        };
+      }
+
+      const result = await this.mainAppService.send('live-match.startSuperOver', matchId);
+      return result;
+    } catch (error: any) {
+      this.logger.error('Error in startSuperOver', error.stack || error.message || error);
+      return {
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        status: false,
+        userMessage: 'Failed to start Super Over',
+        userMessageCode: 'SUPER_OVER_START_FAILED',
+        developerMessage: error.message,
+        data: null,
+      };
+    }
+  }
 }
