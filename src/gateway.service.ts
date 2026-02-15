@@ -231,6 +231,10 @@ export class GatewayService {
         'set-striker': 'live-match.setStriker',
         'set-non-striker': 'live-match.setNonStriker',
         'swap-batsmen': 'live-match.swapBatsmen',
+        'evaluate': 'live-match.evaluateMatchOutcome',
+        'super-over': 'live-match.startSuperOver',
+        'event': 'live-match.handleEvent',
+        'simple-event': 'live-match.handleSimpleEvent',
       };
 
       if (liveMatchRoutes[subResource]) {
