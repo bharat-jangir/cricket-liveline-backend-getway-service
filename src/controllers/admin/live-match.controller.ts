@@ -140,30 +140,16 @@ export class AdminLiveMatchController {
         };
       }
 
-      // Get all innings for this match (1-4)
-      const innings = [];
-      for (let i = 1; i <= 4; i++) {
-        try {
-          const result = await this.mainAppService.send('live-match.getScorecard', { matchId, inningNumber: i });
-          if (result && result.data && result.data.result && result.data.result.inning) {
-            innings.push(result.data.result.inning);
-          }
-        } catch (error) {
-          // Inning doesn't exist, skip it
-          continue;
-        }
+      // Get all innings for this match
+      console.log(`[Gateway] Fetching innings for matchId: ${matchId}`);
+      const result = await this.mainAppService.send('live-match.getAllInnings', matchId);
+      console.log(`[Gateway] Received result from main-app:`, JSON.stringify(result).substring(0, 200) + '...');
+
+      if (!result) {
+        throw new Error('No response from main app service');
       }
 
-      return {
-        statusCode: HttpStatus.OK,
-        status: true,
-        userMessage: 'Innings retrieved successfully',
-        userMessageCode: 'INNINGS_RETRIEVED',
-        developerMessage: 'Innings retrieved successfully',
-        data: {
-          result: innings
-        }
-      };
+      return result;
     } catch (error: any) {
       this.logger.error('Error in getInnings', error.stack || error.message || error);
       return {
