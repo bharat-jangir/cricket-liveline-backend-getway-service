@@ -356,13 +356,13 @@ export class AdminLiveMatchController {
       }
 
       const inningNum = parseInt(inningNumber, 10);
-      if (isNaN(inningNum) || inningNum < 1 || inningNum > 4) {
+      if (isNaN(inningNum) || inningNum < 1 || inningNum > 10) {
         return {
           statusCode: HttpStatus.BAD_REQUEST,
           status: false,
           userMessage: 'Invalid inning number',
           userMessageCode: 'INVALID_INNING_NUMBER',
-          developerMessage: 'Inning number must be between 1 and 4',
+          developerMessage: 'Inning number must be between 1 and 10',
           data: null,
         };
       }
@@ -407,13 +407,13 @@ export class AdminLiveMatchController {
       }
 
       const inningNum = parseInt(inningNumber, 10);
-      if (isNaN(inningNum) || inningNum < 1 || inningNum > 4) {
+      if (isNaN(inningNum) || inningNum < 1 || inningNum > 10) {
         return {
           statusCode: HttpStatus.BAD_REQUEST,
           status: false,
           userMessage: 'Invalid inning number',
           userMessageCode: 'INVALID_INNING_NUMBER',
-          developerMessage: 'Inning number must be between 1 and 4',
+          developerMessage: 'Inning number must be between 1 and 10',
           data: null,
         };
       }
@@ -460,13 +460,13 @@ export class AdminLiveMatchController {
       }
 
       const inningNum = parseInt(inningNumber, 10);
-      if (isNaN(inningNum) || inningNum < 1 || inningNum > 4) {
+      if (isNaN(inningNum) || inningNum < 1 || inningNum > 10) {
         return {
           statusCode: HttpStatus.BAD_REQUEST,
           status: false,
           userMessage: 'Invalid inning number',
           userMessageCode: 'INVALID_INNING_NUMBER',
-          developerMessage: 'Inning number must be between 1 and 4',
+          developerMessage: 'Inning number must be between 1 and 10',
           data: null,
         };
       }
@@ -512,13 +512,13 @@ export class AdminLiveMatchController {
       }
 
       const inningNum = parseInt(inningNumber, 10);
-      if (isNaN(inningNum) || inningNum < 1 || inningNum > 4) {
+      if (isNaN(inningNum) || inningNum < 1 || inningNum > 10) {
         return {
           statusCode: HttpStatus.BAD_REQUEST,
           status: false,
           userMessage: 'Invalid inning number',
           userMessageCode: 'INVALID_INNING_NUMBER',
-          developerMessage: 'Inning number must be between 1 and 4',
+          developerMessage: 'Inning number must be between 1 and 10',
           data: null,
         };
       }
@@ -561,13 +561,13 @@ export class AdminLiveMatchController {
       }
 
       const inningNum = parseInt(inningNumber, 10);
-      if (isNaN(inningNum) || inningNum < 1 || inningNum > 4) {
+      if (isNaN(inningNum) || inningNum < 1 || inningNum > 10) {
         return {
           statusCode: HttpStatus.BAD_REQUEST,
           status: false,
           userMessage: 'Invalid inning number',
           userMessageCode: 'INVALID_INNING_NUMBER',
-          developerMessage: 'Inning number must be between 1 and 4',
+          developerMessage: 'Inning number must be between 1 and 10',
           data: null,
         };
       }
@@ -664,13 +664,13 @@ export class AdminLiveMatchController {
       }
 
       const inningNum = parseInt(inningNumber, 10);
-      if (isNaN(inningNum) || inningNum < 1 || inningNum > 4) {
+      if (isNaN(inningNum) || inningNum < 1 || inningNum > 10) {
         return {
           statusCode: HttpStatus.BAD_REQUEST,
           status: false,
           userMessage: 'Invalid inning number',
           userMessageCode: 'INVALID_INNING_NUMBER',
-          developerMessage: 'Inning number must be between 1 and 4',
+          developerMessage: 'Inning number must be between 1 and 10',
           data: null,
         };
       }
@@ -727,13 +727,13 @@ export class AdminLiveMatchController {
       }
 
       const inningNum = parseInt(inningNumber, 10);
-      if (isNaN(inningNum) || inningNum < 1 || inningNum > 4) {
+      if (isNaN(inningNum) || inningNum < 1 || inningNum > 10) {
         return {
           statusCode: HttpStatus.BAD_REQUEST,
           status: false,
           userMessage: 'Invalid inning number',
           userMessageCode: 'INVALID_INNING_NUMBER',
-          developerMessage: 'Inning number must be between 1 and 4',
+          developerMessage: 'Inning number must be between 1 and 10',
           data: null,
         };
       }
