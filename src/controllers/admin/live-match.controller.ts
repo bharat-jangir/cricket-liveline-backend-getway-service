@@ -1195,6 +1195,7 @@ export class AdminLiveMatchController {
   ) {
     try {
       const result = await this.mainAppService.send('live-match.updateCommentary', {
+        matchId,
         commentaryId,
         commentary,
       });
@@ -1218,7 +1219,10 @@ export class AdminLiveMatchController {
     @Param('commentaryId') commentaryId: string,
   ) {
     try {
-      const result = await this.mainAppService.send('live-match.deleteCommentary', { commentaryId });
+      const result = await this.mainAppService.send('live-match.deleteCommentary', {
+        matchId,
+        commentaryId
+      });
       return result;
     } catch (error: any) {
       this.logger.error('Error in deleteCommentary', error.stack || error.message || error);
@@ -1232,7 +1236,7 @@ export class AdminLiveMatchController {
     }
   }
 
-  @Post('super-over')
+  @Post(':matchId/super-over')
   @HttpCode(HttpStatus.OK)
   @UsePipes(new ValidationPipe({ transform: true }))
   async startSuperOver(@Param('matchId') matchId: string, @Body() startDto?: StartSuperOverDto) {
@@ -1247,8 +1251,16 @@ export class AdminLiveMatchController {
           data: null,
         };
       }
+      const payload = {
+        matchId,
+        ...startDto,
+      };
 
-      const result = await this.mainAppService.send('live-match.startSuperOver', matchId);
+      const result = await this.mainAppService.send(
+        'live-match.startSuperOver',
+        payload,
+      );
+
       return result;
     } catch (error: any) {
       this.logger.error('Error in startSuperOver', error.stack || error.message || error);
@@ -1260,6 +1272,52 @@ export class AdminLiveMatchController {
         developerMessage: error.message,
         data: null,
       };
+    }
+  }
+
+  @Get('partnerships')
+  @HttpCode(HttpStatus.OK)
+  async getPartnerships(
+    @Param('matchId') matchId: string,
+    @Query('inningNumber') inningNumber?: string
+  ) {
+    try {
+      if (!/^[0-9a-fA-F]{24}$/.test(matchId)) {
+        return { statusCode: HttpStatus.BAD_REQUEST, status: false, userMessage: 'Invalid match ID format' };
+      }
+
+      const response = await this.mainAppService.send(
+        'live-match.get-partnerships',
+        { matchId, inningNumber: inningNumber ? parseInt(inningNumber, 10) : undefined },
+      );
+      return response;
+    } catch (error: any) {
+      this.logger.error('Error in getPartnerships', error.stack || error.message || error);
+      return { statusCode: HttpStatus.INTERNAL_SERVER_ERROR, status: false, userMessage: 'Failed to fetch partnerships' };
+    }
+  }
+
+  @Post('partnerships')
+  @HttpCode(HttpStatus.OK)
+  async upsertPartnerships(
+    @Param('matchId') matchId: string,
+    @Body() body: { inningNumber: number; partnerships: any[] }
+  ) {
+    try {
+      if (!/^[0-9a-fA-F]{24}$/.test(matchId)) {
+        return { statusCode: HttpStatus.BAD_REQUEST, status: false, userMessage: 'Invalid match ID format' };
+      }
+      if (!body.inningNumber || !body.partnerships) {
+        return { statusCode: HttpStatus.BAD_REQUEST, status: false, userMessage: 'inningNumber and partnerships are required' };
+      }
+      const response = await this.mainAppService.send(
+        'live-match.upsert-partnerships',
+        { matchId, inningNumber: body.inningNumber, partnerships: body.partnerships },
+      );
+      return response;
+    } catch (error: any) {
+      this.logger.error('Error in upsertPartnerships', error.stack || error.message || error);
+      return { statusCode: HttpStatus.INTERNAL_SERVER_ERROR, status: false, userMessage: 'Failed to save partnerships' };
     }
   }
 }
