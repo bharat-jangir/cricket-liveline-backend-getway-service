@@ -103,13 +103,22 @@ export class GatewayService {
           updateDto: req.body
         };
       } else if (routePattern === 'live-match.updateLiveStatus') {
-        // Handle /matches/:id/live-status
+        // Handle /matches/:id/live-status PUT
         data = {
           matchId,
           updateDto: req.body
         };
+      } else if (
+        // Simple GET routes that receive only the matchId string
+        routePattern === 'live-match.getSquads' ||
+        routePattern === 'live-match.getStatus' ||
+        routePattern === 'live-match.getSessions' ||
+        routePattern === 'live-match.getAllInnings' ||
+        routePattern === 'live-match.evaluateMatchOutcome'
+      ) {
+        data = matchId; // send plain string
       } else {
-        // For other live-match routes (simple-event, evaluate, etc.), send data including body
+        // For mutation routes (event, simple-event, etc.), include body
         data = {
           matchId,
           ...req.body
