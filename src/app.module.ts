@@ -18,6 +18,8 @@ import { AdminMatchesController } from './controllers/admin/matches.controller';
 import { AdminPointsTablesController } from './controllers/admin/points-tables.controller';
 import { AdminFantasyStatsController } from './controllers/admin/fantasy-stats.controller';
 import { AdminLiveMatchController } from './controllers/admin/live-match.controller';
+import { AppMatchesController } from './controllers/app/matches.controller';
+import { AppMatchesService } from './services/app/matches.service';
 import { MainAppService } from './services/main-app.service';
 import { LoggerService } from './common/services/logger.service';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
@@ -39,6 +41,7 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
   // to ensure specific routes are matched first
   controllers: [
     AppController,
+    AppMatchesController,
     AdminVenuesController,
     AdminVenueStatsController,
     AdminUmpiresController,
@@ -57,6 +60,7 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
     AppService,
     GatewayService,
     MainAppService,
+    AppMatchesService,
     LoggerService,
     {
       provide: APP_INTERCEPTOR,

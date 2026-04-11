@@ -34,19 +34,19 @@ async function bootstrap() {
 
   // CORS configuration
   app.enableCors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    origin: true,
     credentials: true,
   });
 
-  // Global prefix
+  // Global prefix for all routes
   app.setGlobalPrefix('api');
 
+  // Triggering Hot Reload manually
   const port = process.env.PORT || 5000;
-  await app.listen(port);
+  await app.listen(port, '0.0.0.0');
   
   const logger = new Logger('Bootstrap');
   logger.log(`🚪 Gateway Service is running on: http://localhost:${port}/api`);
 }
 
 bootstrap();
-

@@ -109,8 +109,11 @@ export class GatewayService {
           updateDto: req.body
         };
       } else {
-        // For other live-match routes, just send matchId
-        data = matchId;
+        // For other live-match routes (simple-event, evaluate, etc.), send data including body
+        data = {
+          matchId,
+          ...req.body
+        };
       }
     } else {
       // Standard CRUD data formatting
@@ -206,9 +209,9 @@ export class GatewayService {
     if (resource === 'matches' && pathParts.length >= 3) {
       const subResource = pathParts[2];
 
-      // Handle /matches/:id/innings -> use getScorecard
+      // Handle /matches/:id/innings -> use getAllInnings
       if (subResource === 'innings') {
-        return 'live-match.getScorecard';
+        return 'live-match.getAllInnings';
       }
 
       // Handle /matches/:id/scorecard routes

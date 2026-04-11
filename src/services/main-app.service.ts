@@ -8,7 +8,7 @@ export class MainAppService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(MainAppService.name);
 
   constructor(private configService: ConfigService) {
-    const host = this.configService.get('MAIN_APP_HOST') || 'localhost';
+    const host = this.configService.get('MAIN_APP_HOST') || '127.0.0.1';
     const port = parseInt(this.configService.get('MAIN_APP_TCP_PORT') || '3001');
     
     this.logger.log(`Initializing TCP client for main-app at ${host}:${port}`);
