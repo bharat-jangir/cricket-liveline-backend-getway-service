@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, Logger, ConsoleLogger } from '@nestjs/common';
 import { AppModule } from './app.module';
+import { createProxyMiddleware } from 'http-proxy-middleware';
 
 class CustomLogger extends ConsoleLogger {
   log(message: string, context?: string) {
@@ -41,9 +42,29 @@ async function bootstrap() {
   // Global prefix for all routes
   app.setGlobalPrefix('api');
 
+  // Add WebSocket Proxy routing to the dedicated Socket Service
+  const socketProxy = createProxyMiddleware({
+    target: process.env.SOCKET_SERVICE_URL || 'http://localhost:5002',
+    changeOrigin: true,
+    ws: true, // Proxy WebSockets
+  });
+  
+  app.use('/socket.io', socketProxy);
+
   // Triggering Hot Reload manually
   const port = process.env.PORT || 5000;
+  
+  // Actually start the server and keep reference
   await app.listen(port, '0.0.0.0');
+  
+  // Attach the websocket upgrade handler from the proxy to the raw http server
+  const server = app.getHttpServer();
+  server.on('upgrade', (req, socket, head) => {
+    const logger = new Logger('WebSocketProxy');
+    logger.log(`Incoming WS upgrade request for: ${req.url}`);
+    socketProxy.upgrade(req, socket, head);
+  });
+
   
   const logger = new Logger('Bootstrap');
   logger.log(`🚪 Gateway Service is running on: http://localhost:${port}/api`);

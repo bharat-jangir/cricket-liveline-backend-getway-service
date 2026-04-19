@@ -69,7 +69,7 @@ export class GatewayService {
     if (routePattern.startsWith('live-match.')) {
       const matchId = pathParts[1]; // matches/:id/...
 
-      if (routePattern === 'live-match.getRecentOvers') {
+      if (routePattern === 'live-match.getRecentOvers' || routePattern === 'live-match.get-partnerships') {
         data = {
           matchId,
           inningNumber: req.query.inningNumber ? parseInt(req.query.inningNumber as string) : undefined
@@ -237,6 +237,7 @@ export class GatewayService {
       const liveMatchRoutes: Record<string, string> = {
         'live-status': method === 'PUT' ? 'live-match.updateLiveStatus' : 'live-match.getStatus',
         'recent-overs': 'live-match.getRecentOvers',
+        'partnerships': 'live-match.get-partnerships',
         'squads': 'live-match.getSquads',
         'sessions': 'live-match.getSessions',
         'set-current-bowler': 'live-match.setCurrentBowler',

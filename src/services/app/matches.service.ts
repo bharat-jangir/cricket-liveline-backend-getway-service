@@ -53,6 +53,50 @@ export class AppMatchesService {
     return result;
   }
 
+  async getCommentary(matchId: string) {
+    this.logger.debug(`[getCommentary] Fetching for match: ${matchId}`);
+    const result = await this.mainAppService.send('live-match.getCommentary', { matchId });
+    this.logger.debug(`[getCommentary] Received response for match: ${matchId}, length: ${Array.isArray(result) ? result.length : 'N/A'}`);
+    return result;
+  }
+
+  async getLiveStatus(matchId: string) {
+    this.logger.debug(`[getLiveStatus] Fetching for match: ${matchId}`);
+    const result = await this.mainAppService.send('live-match.getStatus', matchId);
+    this.logger.debug(`[getLiveStatus] Received response for match: ${matchId}, keys: ${result ? Object.keys(result) : 'null'}`);
+    return result;
+  }
+
+  async getScorecard(matchId: string, inningNumber: number) {
+    const result = await this.mainAppService.send('live-match.getScorecard', { matchId, inningNumber });
+    return result;
+  }
+
+  async getSquads(matchId: string) {
+    const result = await this.mainAppService.send('live-match.getSquads', matchId);
+    return result;
+  }
+
+  async getSessions(matchId: string) {
+    const result = await this.mainAppService.send('live-match.getSessions', matchId);
+    return result;
+  }
+
+  async getPartnerships(matchId: string, inningNumber: number) {
+    const result = await this.mainAppService.send('live-match.get-partnerships', { matchId, inningNumber });
+    return result;
+  }
+
+  async getRecentOvers(matchId: string, inningNumber: number) {
+    const result = await this.mainAppService.send('live-match.getRecentOvers', { matchId, inningNumber });
+    return result;
+  }
+
+  async getAnalytics(matchId: string) {
+    const result = await this.mainAppService.send('live-match.getAnalytics', matchId);
+    return result;
+  }
+
   private sanitizeMatch(match: any) {
     if (!match) return match;
 
