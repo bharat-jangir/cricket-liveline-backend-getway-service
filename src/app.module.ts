@@ -1,7 +1,10 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { HttpModule } from '@nestjs/axios';
-import { APP_INTERCEPTOR, APP_FILTER } from '@nestjs/core';
+import { APP_INTERCEPTOR, APP_FILTER, APP_GUARD } from '@nestjs/core';
+import { JwtModule } from '@nestjs/jwt';
+import { AuthGuard, resolveJwtSecret } from './auth/auth.guard';
+import { AuthController } from './auth/auth.controller';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { GatewayController } from './gateway.controller';
@@ -19,6 +22,8 @@ import { AdminPointsTablesController } from './controllers/admin/points-tables.c
 import { AdminFantasyStatsController } from './controllers/admin/fantasy-stats.controller';
 import { AdminLiveMatchController } from './controllers/admin/live-match.controller';
 import { AppMatchesController } from './controllers/app/matches.controller';
+import { AppCatalogController } from './controllers/app/catalog.controller';
+import { AppCatalogService } from './services/app/catalog.service';
 import { AppMatchesService } from './services/app/matches.service';
 import { MainAppService } from './services/main-app.service';
 import { LoggerService } from './common/services/logger.service';
@@ -32,6 +37,7 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
       isGlobal: true,
       envFilePath: '.env',
     }),
+    JwtModule.register({ secret: resolveJwtSecret(), verifyOptions: { algorithms: ['HS256'] } }),
     HttpModule.register({
       timeout: 5000,
       maxRedirects: 5,
@@ -41,7 +47,9 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
   // to ensure specific routes are matched first
   controllers: [
     AppController,
+    AuthController,
     AppMatchesController,
+    AppCatalogController,
     AdminVenuesController,
     AdminVenueStatsController,
     AdminUmpiresController,
@@ -61,7 +69,9 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
     GatewayService,
     MainAppService,
     AppMatchesService,
+    AppCatalogService,
     LoggerService,
+    { provide: APP_GUARD, useClass: AuthGuard },
     {
       provide: APP_INTERCEPTOR,
       useClass: LoggingInterceptor,

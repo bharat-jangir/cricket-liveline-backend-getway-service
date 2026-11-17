@@ -7,8 +7,23 @@ export class AppMatchesService {
 
   constructor(private readonly mainAppService: MainAppService) {}
 
-  async findAll(query: any) {
+  private pick(query: any, keys: string[]) {
+    const out: any = {};
+    for (const k of keys) {
+      if (query?.[k] !== undefined && query[k] !== '') out[k] = query[k];
+    }
+    return out;
+  }
+
+  async findAll(rawQuery: any) {
+    // Public API: only whitelisted filters, bounded page size
+    const query = this.pick(rawQuery, ['status', 'seriesId', 'teamId', 'matchFormat', 'search', 'page', 'limit', 'direction']);
+    query.limit = Math.min(parseInt(query.limit) || 20, 50);
+    query.page = Math.max(parseInt(query.page) || 1, 1);
     const result = await this.mainAppService.send('matches.findAll', query);
+    if (result?.data && Array.isArray(result.data.result)) {
+      result.data.result = result.data.result.filter((m: any) => !m?.isNotShowing);
+    }
     
     if (result && result.data && Array.isArray(result.data.result)) {
       const mapped = result.data.result.map((match: any) => this.sanitizeMatch(match));
@@ -53,9 +68,11 @@ export class AppMatchesService {
     return result;
   }
 
-  async getCommentary(matchId: string) {
+  async getCommentary(matchId: string, rawQuery: any = {}) {
     this.logger.debug(`[getCommentary] Fetching for match: ${matchId}`);
-    const result = await this.mainAppService.send('live-match.getCommentary', { matchId });
+    const q = this.pick(rawQuery, ['type', 'inningId', 'page', 'limit']);
+    if (q.limit) q.limit = Math.min(parseInt(q.limit) || 20, 100);
+    const result = await this.mainAppService.send('live-match.getCommentary', { matchId, ...q });
     this.logger.debug(`[getCommentary] Received response for match: ${matchId}, length: ${Array.isArray(result) ? result.length : 'N/A'}`);
     return result;
   }
@@ -131,9 +148,11 @@ export class AppMatchesService {
                 const batId = inn.battingTeamId?.toString();
                 
                 const scoreStr = `${inn.totalRuns || 0}/${inn.totalWickets || 0}`;
-                const overs = Math.floor((inn.totalBalls || 0) / 6);
-                const balls = (inn.totalBalls || 0) % 6;
-                const oversStr = `${overs}.${balls}`;
+                const isHundred = String(match.matchFormat || '').toLowerCase() === 'hundred';
+                const bpo = isHundred ? 5 : (match.ballsPerOver || 6);
+                const oversStr = isHundred
+                  ? String(inn.totalBalls || 0)
+                  : `${Math.floor((inn.totalBalls || 0) / bpo)}.${(inn.totalBalls || 0) % bpo}`;
 
                 if (batId === t1Id) {
                     t1Scores.push(scoreStr);
@@ -190,6 +209,8 @@ export class AppMatchesService {
           overs: team2Overs
       },
       status: displayStatus,
+      matchType: match.matchType,
+      ballsLabel: String(match.matchFormat || '').toLowerCase() === 'hundred' ? 'balls' : 'ov',
       battingTeam: battingTeamCode,
       venue: getName(match.venueId, 'Unknown Venue'),
       time: match.matchTime || match.matchDate,

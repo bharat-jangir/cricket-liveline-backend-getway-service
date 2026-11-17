@@ -7,7 +7,7 @@ import { MainAppService } from './services/main-app.service';
 @Injectable()
 export class GatewayService {
   private readonly logger = new Logger(GatewayService.name);
-  private readonly socketServiceUrl = process.env.SOCKET_SERVICE_URL || 'http://localhost:3002';
+  private readonly socketServiceUrl = process.env.SOCKET_SERVICE_URL || 'http://localhost:5002';
 
   constructor(
     private readonly httpService: HttpService,

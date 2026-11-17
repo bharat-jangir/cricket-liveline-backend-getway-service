@@ -1,6 +1,7 @@
 import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { ClientProxy, ClientProxyFactory, Transport } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
+import { firstValueFrom, timeout } from 'rxjs';
 
 @Injectable()
 export class MainAppService implements OnModuleInit, OnModuleDestroy {
@@ -23,12 +24,25 @@ export class MainAppService implements OnModuleInit, OnModuleDestroy {
   }
 
   async onModuleInit() {
-    try {
-      await this.client.connect();
-      this.logger.log('Successfully connected to main-app TCP service');
-    } catch (error) {
-      this.logger.error(`Failed to connect to main-app: ${error?.message || error}`);
+    // Don't block gateway start-up on the main app: it may still be booting (watch mode,
+    // docker-compose, etc). Keep retrying in the background until it is reachable.
+    void this.connectWithRetry();
+  }
+
+  private async connectWithRetry(maxAttempts = 30, delayMs = 2000) {
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        await this.client.connect();
+        this.logger.log('Successfully connected to main-app TCP service');
+        return;
+      } catch (error: any) {
+        if (attempt === 1 || attempt % 5 === 0) {
+          this.logger.warn(`main-app not reachable yet (attempt ${attempt}/${maxAttempts}): ${error?.message || error}`);
+        }
+        await new Promise((r) => setTimeout(r, delayMs));
+      }
     }
+    this.logger.error('Giving up on eager main-app connection; it will be retried on the next request');
   }
 
   async onModuleDestroy() {
@@ -41,7 +55,7 @@ export class MainAppService implements OnModuleInit, OnModuleDestroy {
 
   async send(pattern: string, data: any): Promise<any> {
     try {
-      return await this.client.send(pattern, data).pipe().toPromise();
+      return await firstValueFrom(this.client.send(pattern, data).pipe(timeout(20000)));
     } catch (error: any) {
       this.logger.error(`Error sending message to main-app - Pattern: ${pattern}`);
       this.logger.error(`Data: ${JSON.stringify(data)}`);

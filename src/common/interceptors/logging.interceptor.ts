@@ -31,7 +31,7 @@ export class LoggingInterceptor implements NestInterceptor {
     let logoId: string = '';
     
     try {
-      this.logger.log(`[REQUEST] ${request.method} ${request.path} - Creating log entry`);
+      this.logger.debug(`[REQUEST] ${request.method} ${request.path} - Creating log entry`);
       logoId = await this.loggerService.createInitialLog({
         method: request.method,
         path: request.path,
@@ -45,11 +45,11 @@ export class LoggingInterceptor implements NestInterceptor {
       });
       
       if (logoId && typeof logoId === 'string' && logoId.trim() !== '') {
-        this.logger.log(`[LOG CREATED] ${request.method} ${request.path} - logoId: ${logoId}`);
+        this.logger.debug(`[LOG CREATED] ${request.method} ${request.path} - logoId: ${logoId}`);
         // Store logoId in request for later use
         (request as any).logoId = logoId;
-        this.logger.log(`[LOG CREATED] ${request.method} ${request.path} - logoId stored in request: ${(request as any).logoId}`);
-        this.logger.log(`[LOG CREATED] ${request.method} ${request.path} - Verification - request.logoId is set: ${!!(request as any).logoId}`);
+        this.logger.debug(`[LOG CREATED] ${request.method} ${request.path} - logoId stored in request: ${(request as any).logoId}`);
+        this.logger.debug(`[LOG CREATED] ${request.method} ${request.path} - Verification - request.logoId is set: ${!!(request as any).logoId}`);
       } else {
         this.logger.warn(`[LOG FAILED] ${request.method} ${request.path} - Failed to create log entry, logoId is empty or invalid. Received: ${logoId}`);
         // Even if empty, still set it
@@ -68,7 +68,7 @@ export class LoggingInterceptor implements NestInterceptor {
         const finalLogoId = (request as any).logoId || logoId;
 
         if (finalLogoId) {
-          this.logger.log(`[LOG UPDATE] ${request.method} ${request.path} - Updating log ${finalLogoId} with status ${statusCode} (${responseTime}ms)`);
+          this.logger.debug(`[LOG UPDATE] ${request.method} ${request.path} - Updating log ${finalLogoId} with status ${statusCode} (${responseTime}ms)`);
           this.loggerService.updateLog({
             logoId: finalLogoId,
             statusCode,

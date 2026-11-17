@@ -1,6 +1,8 @@
 import { Controller, Get, Param, Query, HttpCode, HttpStatus } from '@nestjs/common';
+import { Public } from '../../auth/public.decorator';
 import { AppMatchesService } from '../../services/app/matches.service';
 
+@Public()
 @Controller('app/matches')
 export class AppMatchesController {
   constructor(private readonly appMatchesService: AppMatchesService) {}
@@ -20,8 +22,8 @@ export class AppMatchesController {
 
   @Get(':id/commentary')
   @HttpCode(HttpStatus.OK)
-  async getCommentary(@Param('id') id: string) {
-    return this.appMatchesService.getCommentary(id);
+  async getCommentary(@Param('id') id: string, @Query() query: any) {
+    return this.appMatchesService.getCommentary(id, query);
   }
 
   @Get(':id/live-status')

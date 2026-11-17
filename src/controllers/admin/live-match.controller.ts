@@ -1236,7 +1236,7 @@ export class AdminLiveMatchController {
     }
   }
 
-  @Post(':matchId/super-over')
+  @Post('super-over')
   @HttpCode(HttpStatus.OK)
   @UsePipes(new ValidationPipe({ transform: true }))
   async startSuperOver(@Param('matchId') matchId: string, @Body() startDto?: StartSuperOverDto) {
@@ -1251,9 +1251,10 @@ export class AdminLiveMatchController {
           data: null,
         };
       }
+      // URL param always wins over body to avoid mismatched ids
       const payload = {
-        matchId,
         ...startDto,
+        matchId,
       };
 
       const result = await this.mainAppService.send(

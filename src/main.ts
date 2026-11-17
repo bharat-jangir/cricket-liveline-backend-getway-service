@@ -34,10 +34,12 @@ async function bootstrap() {
   );
 
   // CORS configuration
+  const origins = (process.env.FRONTEND_URL || '').split(',').map((o) => o.trim()).filter(Boolean);
   app.enableCors({
-    origin: true,
+    origin: origins.length ? origins : true,
     credentials: true,
   });
+  app.enableShutdownHooks();
 
   // Global prefix for all routes
   app.setGlobalPrefix('api');
