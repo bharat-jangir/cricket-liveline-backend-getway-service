@@ -53,9 +53,9 @@ export class AppMatchesService {
     return result;
   }
 
-  async getCommentary(matchId: string) {
+  async getCommentary(matchId: string, query?: any) {
     this.logger.debug(`[getCommentary] Fetching for match: ${matchId}`);
-    const result = await this.mainAppService.send('live-match.getCommentary', { matchId });
+    const result = await this.mainAppService.send('live-match.getCommentary', { matchId, ...query });
     this.logger.debug(`[getCommentary] Received response for match: ${matchId}, length: ${Array.isArray(result) ? result.length : 'N/A'}`);
     return result;
   }

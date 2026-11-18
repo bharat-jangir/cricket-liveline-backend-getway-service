@@ -65,6 +65,10 @@ export class CreatePlayerDto {
 
   @IsOptional()
   @IsString()
+  f_key?: string;
+
+  @IsOptional()
+  @IsString()
   @MaxLength(100)
   nickName?: string;
 
@@ -208,6 +212,9 @@ export class CreatePlayerDto {
   @ValidateNested()
   @Type(() => SocialMediaDto)
   socialMedia?: SocialMediaDto;
+
+  @IsOptional()
+  careerStats?: any;
 }
 
 export class UpdatePlayerDto {
@@ -371,6 +378,9 @@ export class UpdatePlayerDto {
   @ValidateNested()
   @Type(() => SocialMediaDto)
   socialMedia?: SocialMediaDto;
+
+  @IsOptional()
+  careerStats?: any;
 }
 
 export class QueryPlayersDto {

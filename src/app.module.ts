@@ -18,8 +18,14 @@ import { AdminMatchesController } from './controllers/admin/matches.controller';
 import { AdminPointsTablesController } from './controllers/admin/points-tables.controller';
 import { AdminFantasyStatsController } from './controllers/admin/fantasy-stats.controller';
 import { AdminLiveMatchController } from './controllers/admin/live-match.controller';
+import { AdminRankingsController } from './controllers/admin/rankings.controller';
 import { AppMatchesController } from './controllers/app/matches.controller';
+import { AppRankingsController } from './controllers/app/rankings.controller';
+import { AppSeriesController } from './controllers/app/series.controller';
+import { AppVenuesController } from './controllers/app/venues.controller';
+import { AppPlayersController } from './controllers/app/players.controller';
 import { AppMatchesService } from './services/app/matches.service';
+import { AppSeriesService } from './services/app/series.service';
 import { MainAppService } from './services/main-app.service';
 import { LoggerService } from './common/services/logger.service';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
@@ -42,6 +48,10 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
   controllers: [
     AppController,
     AppMatchesController,
+    AppRankingsController,
+    AppSeriesController,
+    AppVenuesController,
+    AppPlayersController,
     AdminVenuesController,
     AdminVenueStatsController,
     AdminUmpiresController,
@@ -54,6 +64,7 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
     AdminPointsTablesController,
     AdminFantasyStatsController,
     AdminLiveMatchController,
+    AdminRankingsController,
     GatewayController,
   ],
   providers: [
@@ -61,11 +72,9 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
     GatewayService,
     MainAppService,
     AppMatchesService,
+    AppSeriesService,
     LoggerService,
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: LoggingInterceptor,
-    },
+    // LoggingInterceptor disabled since LogsModule was removed in main-app
     {
       provide: APP_INTERCEPTOR,
       useClass: ResponseInterceptor,

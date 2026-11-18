@@ -20,8 +20,8 @@ export class AppMatchesController {
 
   @Get(':id/commentary')
   @HttpCode(HttpStatus.OK)
-  async getCommentary(@Param('id') id: string) {
-    return this.appMatchesService.getCommentary(id);
+  async getCommentary(@Param('id') id: string, @Query() query: any) {
+    return this.appMatchesService.getCommentary(id, query);
   }
 
   @Get(':id/live-status')

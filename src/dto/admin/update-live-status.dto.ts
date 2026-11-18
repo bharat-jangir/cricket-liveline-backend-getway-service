@@ -110,6 +110,9 @@ export class UpdateLiveStatusDto {
   isMatchNew?: boolean;
 
   @IsOptional()
+  isNew?: boolean;
+
+  @IsOptional()
   noScorecards?: boolean;
 
   @IsOptional()

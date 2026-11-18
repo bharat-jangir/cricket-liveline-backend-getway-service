@@ -117,6 +117,11 @@ export class GatewayService {
         routePattern === 'live-match.evaluateMatchOutcome'
       ) {
         data = matchId; // send plain string
+      } else if (routePattern === 'live-match.getCommentary') {
+        data = {
+          matchId,
+          ...req.query
+        };
       } else {
         // For mutation routes (event, simple-event, etc.), include body
         data = {
@@ -129,19 +134,19 @@ export class GatewayService {
       if (req.method === 'GET') {
         const lastPart = pathParts[pathParts.length - 1];
         const resourceNames = ['venues', 'teams', 'players', 'matches', 'umpires', 'series'];
-        if (lastPart && !resourceNames.includes(lastPart.toLowerCase()) && Object.keys(req.query).length === 0) {
+        if (lastPart && !resourceNames.includes(lastPart.toLowerCase()) && Object.keys(req.query || {}).length === 0) {
           data = lastPart; // It's an ID
         } else {
-          data = req.query; // Use query params
+          data = req.query || {}; // Use query params
         }
       } else if (req.method === 'POST') {
-        data = req.body;
+        data = req.body || {};
       } else if (req.method === 'PUT') {
         const id = pathParts[pathParts.length - 1];
         if (id) {
-          data = { id, updateVenueDto: req.body };
+          data = { id, updateVenueDto: req.body || {} };
         } else {
-          data = req.body;
+          data = req.body || {};
         }
       } else if (req.method === 'DELETE') {
         const id = pathParts[pathParts.length - 1];
@@ -248,6 +253,7 @@ export class GatewayService {
         'super-over': 'live-match.startSuperOver',
         'event': 'live-match.handleEvent',
         'simple-event': 'live-match.handleSimpleEvent',
+        'commentary': 'live-match.getCommentary',
       };
 
       if (liveMatchRoutes[subResource]) {
