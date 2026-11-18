@@ -22,6 +22,8 @@ import { AdminPointsTablesController } from './controllers/admin/points-tables.c
 import { AdminFantasyStatsController } from './controllers/admin/fantasy-stats.controller';
 import { AdminLiveMatchController } from './controllers/admin/live-match.controller';
 import { AppMatchesController } from './controllers/app/matches.controller';
+import { AdminNewsController, AdminShortsController } from './controllers/admin/content.controller';
+import { AppContentController } from './controllers/app/content.controller';
 import { AppCatalogController } from './controllers/app/catalog.controller';
 import { AppCatalogService } from './services/app/catalog.service';
 import { AppMatchesService } from './services/app/matches.service';
@@ -50,6 +52,9 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
     AuthController,
     AppMatchesController,
     AppCatalogController,
+    AppContentController,
+    AdminNewsController,
+    AdminShortsController,
     AdminVenuesController,
     AdminVenueStatsController,
     AdminUmpiresController,

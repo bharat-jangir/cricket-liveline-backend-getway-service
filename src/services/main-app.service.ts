@@ -1,4 +1,4 @@
-import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+import { HttpException, Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { ClientProxy, ClientProxyFactory, Transport } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom, timeout } from 'rxjs';
@@ -47,6 +47,15 @@ export class MainAppService implements OnModuleInit, OnModuleDestroy {
 
   async onModuleDestroy() {
     this.client.close();
+  }
+
+  /** Like send(), but converts a { status:false, statusCode } failure envelope into a real HTTP error. */
+  async sendOrThrow(pattern: string, data: any): Promise<any> {
+    const res = await this.send(pattern, data);
+    if (res && res.status === false) {
+      throw new HttpException(res.userMessage || res.message || 'Request failed', res.statusCode || 400);
+    }
+    return res;
   }
 
   getClient(): ClientProxy {
